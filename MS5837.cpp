@@ -17,25 +17,33 @@ const uint8_t MS5837::MS5837_02BA = 1;
 
 MS5837::MS5837() {
 	fluidDensity = 1029;
+	m_wire = &Wire;
+}
+
+MS5837::MS5837(TwoWire * t_wire)
+{
+	fluidDensity = 1029;
+	m_wire = t_wire;
 }
 
 bool MS5837::init() {
+	Serial.println("RESET MS5837");
 	// Reset the MS5837, per datasheet
-	Wire.beginTransmission(MS5837_ADDR);
-	Wire.write(MS5837_RESET);
-	Wire.endTransmission();
+	m_wire->beginTransmission(MS5837_ADDR);
+	m_wire->write(MS5837_RESET);
+	m_wire->endTransmission();
 
 	// Wait for reset to complete
 	delay(10);
-
+	Serial.println("reset complete");
 	// Read calibration values and CRC
 	for ( uint8_t i = 0 ; i < 7 ; i++ ) {
-		Wire.beginTransmission(MS5837_ADDR);
-		Wire.write(MS5837_PROM_READ+i*2);
-		Wire.endTransmission();
+		m_wire->beginTransmission(MS5837_ADDR);
+		m_wire->write(MS5837_PROM_READ+i*2);
+		m_wire->endTransmission();
 
-		Wire.requestFrom(MS5837_ADDR,2);
-		C[i] = (Wire.read() << 8) | Wire.read();
+		m_wire->requestFrom(MS5837_ADDR,2);
+		C[i] = (m_wire->read() << 8) | m_wire->read();
 	}
 
 	// Verify that data is correct with CRC
@@ -59,38 +67,38 @@ void MS5837::setFluidDensity(float density) {
 
 void MS5837::read() {
 	// Request D1 conversion
-	Wire.beginTransmission(MS5837_ADDR);
-	Wire.write(MS5837_CONVERT_D1_8192);
-	Wire.endTransmission();
+	m_wire->beginTransmission(MS5837_ADDR);
+	m_wire->write(MS5837_CONVERT_D1_8192);
+	m_wire->endTransmission();
 
 	delay(20); // Max conversion time per datasheet
 	
-	Wire.beginTransmission(MS5837_ADDR);
-	Wire.write(MS5837_ADC_READ);
-	Wire.endTransmission();
+	m_wire->beginTransmission(MS5837_ADDR);
+	m_wire->write(MS5837_ADC_READ);
+	m_wire->endTransmission();
 
- 	Wire.requestFrom(MS5837_ADDR,3);
+ 	m_wire->requestFrom(MS5837_ADDR,3);
 	D1 = 0;
-	D1 = Wire.read();
-	D1 = (D1 << 8) | Wire.read();
-	D1 = (D1 << 8) | Wire.read();
+	D1 = m_wire->read();
+	D1 = (D1 << 8) | m_wire->read();
+	D1 = (D1 << 8) | m_wire->read();
 	
 	// Request D2 conversion
-	Wire.beginTransmission(MS5837_ADDR);
-	Wire.write(MS5837_CONVERT_D2_8192);
-	Wire.endTransmission();
+	m_wire->beginTransmission(MS5837_ADDR);
+	m_wire->write(MS5837_CONVERT_D2_8192);
+	m_wire->endTransmission();
 
 	delay(20); // Max conversion time per datasheet
 	
-	Wire.beginTransmission(MS5837_ADDR);
-	Wire.write(MS5837_ADC_READ);
-	Wire.endTransmission();
+	m_wire->beginTransmission(MS5837_ADDR);
+	m_wire->write(MS5837_ADC_READ);
+	m_wire->endTransmission();
 
-	Wire.requestFrom(MS5837_ADDR,3);
+	m_wire->requestFrom(MS5837_ADDR,3);
 	D2 = 0;
-	D2 = Wire.read();
-	D2 = (D2 << 8) | Wire.read();
-	D2 = (D2 << 8) | Wire.read();
+	D2 = m_wire->read();
+	D2 = (D2 << 8) | m_wire->read();
+	D2 = (D2 << 8) | m_wire->read();
 
 	calculate();
 }

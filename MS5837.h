@@ -38,6 +38,7 @@ THE SOFTWARE.
 #define MS5837_H_BLUEROBOTICS
 
 #include "Arduino.h"
+#include <Wire.h>
 
 class MS5837 {
 public:
@@ -49,6 +50,7 @@ public:
 	static const uint8_t MS5837_02BA;
 
 	MS5837();
+	MS5837(TwoWire * t_wire);
 
 	bool init();
 
@@ -83,6 +85,9 @@ public:
 	 */
 	float altitude();
 
+	uint32_t rawPressure() const { return P; }
+	uint32_t rawTemperature()  const { return TEMP; }
+
 private:
 	uint16_t C[8];
 	uint32_t D1, D2;
@@ -91,6 +96,8 @@ private:
 	uint8_t _model;
 
 	float fluidDensity;
+
+	TwoWire* m_wire = nullptr;
 
 	/** Performs calculations per the sensor data sheet for conversion and
 	 *  second order compensation.
